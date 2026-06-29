@@ -58,6 +58,17 @@ async def health_check():
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting up AgentOS...")
+    
+    # Safe logging to debug the connection issue
+    safe_db_url = settings.DATABASE_URL
+    if "@" in safe_db_url:
+        # Mask the password
+        parts = safe_db_url.split("@")
+        credentials = parts[0].split(":")
+        if len(credentials) >= 3:
+            safe_db_url = f"{credentials[0]}:{credentials[1]}:***@{parts[1]}"
+    logger.info(f"Connecting to database at: {safe_db_url.split('@')[-1] if '@' in safe_db_url else safe_db_url}")
+    
     import app.instagram.models
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
