@@ -12,3 +12,4 @@ PyJWT
 bcrypt
 python-multipart
 httpx
+cryptography
