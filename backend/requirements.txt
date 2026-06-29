@@ -8,6 +8,7 @@ pydantic
 pydantic-settings
 alembic
 uvicorn
-python-jose[cryptography]
-passlib[bcrypt]
+PyJWT
+bcrypt
 python-multipart
+httpx
