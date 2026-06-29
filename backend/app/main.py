@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import time
+import json
 
 from app.api.routers import auth, chat, reports, users, conversations, memory, analytics, settings_router, agent
 from app.config.settings import settings
@@ -50,6 +51,35 @@ app.include_router(settings_router.router, prefix="/api/settings", tags=["Settin
 app.include_router(agent.router, prefix="/api/agent", tags=["Agent"])
 from app.instagram.routes import router as instagram_router
 app.include_router(instagram_router, prefix="/api/instagram", tags=["Instagram"])
+
+# WebSocket Manager
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Just echo back or handle it, actual agent logic happens via the REST API
+            await manager.broadcast(f"Received: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 @app.get("/api/health", tags=["Health"])
 async def health_check():

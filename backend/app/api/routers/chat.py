@@ -23,6 +23,20 @@ async def chat(msg: MessageCreate, current_user: User = Depends(get_current_user
     })
     
     reply = await future
+    
+    # Broadcast to websocket
+    try:
+        from app.main import manager
+        import json
+        await manager.broadcast(json.dumps({
+            "id": int(datetime.utcnow().timestamp()),
+            "sender": "ai",
+            "text": reply,
+            "time": datetime.utcnow().strftime("%I:%M %p")
+        }))
+    except Exception as e:
+        pass # Ignore websocket failures in API route
+
     return MessageResponse(
         id=0,
         sender_role="agent",

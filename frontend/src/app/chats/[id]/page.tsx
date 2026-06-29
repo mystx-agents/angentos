@@ -61,6 +61,28 @@ export default function ChatConversationPage() {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    const wsUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace("http", "ws") + "/ws";
+    const ws = new WebSocket(wsUrl);
+    
+    ws.onmessage = (event) => {
+      try {
+        const newMsg = JSON.parse(event.data);
+        if (newMsg.sender === "ai") {
+          setMessages(prev => {
+            // Remove typing indicator if exists
+            const filtered = prev.filter(m => !m.isTyping);
+            return [...filtered, newMsg];
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse websocket message", e);
+      }
+    };
+
+    return () => ws.close();
+  }, []);
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
@@ -76,15 +98,28 @@ export default function ChatConversationPage() {
     setInputValue("");
     
     // Simulate AI typing
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        sender: "ai",
-        text: "I am processing your request...",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isTyping: true
-      }]);
-    }, 1000);
+    setMessages(prev => [...prev, {
+      id: Date.now() + 1,
+      sender: "ai",
+      text: "I am processing your request...",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isTyping: true
+    }]);
+
+    // Send real request to backend
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    fetch(`${apiUrl}/api/messages/chat`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
+      },
+      body: JSON.stringify({ content: inputValue })
+    }).catch(err => {
+      console.error("Chat API error:", err);
+      // Remove typing indicator on error
+      setMessages(prev => prev.filter(m => !m.isTyping));
+    });
   };
 
   return (
