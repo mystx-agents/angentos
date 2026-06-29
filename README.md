@@ -1,62 +1,80 @@
 # AgentOS - Production-Ready AI Operating System
 
-AgentOS is an advanced, production-quality AI Operating System built with a micro-agent architecture. It handles millions of concurrent requests using asynchronous operations, a decoupled service layer, and Redis caching.
+AgentOS is an advanced, production-quality AI Operating System built with a micro-agent architecture and a premium futuristic dashboard. It handles intelligent Instagram conversations, system orchestration, and deep analytics.
 
-## 🏗 Architecture
+## 📁 Repository Structure
 
-AgentOS uses **Clean Architecture** and **SOLID Principles**:
-1. **API Layer**: Fast and asynchronous FastAPI endpoints. Organized into routers for Users, Messages, Conversations, Analytics, etc.
-2. **Service Layer**: The `AgentWorkflow` orchestrates the different micro-agents, ensuring single-responsibility and separation of concerns.
-3. **Agent Layer**: Modular intelligence nodes that handle specific logic (Memory, Safety, Analytics, Reply, Report).
-4. **Data Access Layer (Repositories)**: Abstracts database operations behind a generic `BaseRepository` pattern, making queries reusable and independent.
-5. **Database / Caching**: PostgreSQL (with asyncpg) stores persistent data, while Redis handles ultra-fast retrieval of memories and session analytics.
+The project is structured into two main, independently deployable modules:
 
-## 🤖 The AI Agents
+- **`frontend/`**: A modern Next.js 15 (App Router) React application.
+- **`backend/`**: A high-performance FastAPI Python application.
 
-- **Reply Agent**: Reconstructs the context (history, memory, sentiment) and communicates with the Groq API. Implements exponential backoff and retry mechanisms for fault tolerance.
-- **Memory Agent**: Retrieves and saves user memory across sessions. Caches data in Redis to eliminate DB roundtrips and automatically invalidates on updates.
-- **Analytics Agent**: Analyzes message sentiment (casual, professional, funny, emotional) and updates user metrics (avg reply time, relationship score, message count).
-- **Safety Agent**: Defends the system against prompt injections, jailbreak attempts, and illegal requests using robust keyword filtering and context analysis.
-- **Report Agent**: Aggregates platform-wide data to generate comprehensive daily, weekly, and monthly AI performance reports.
+---
 
-## 🚀 Startup & Deployment
+## 🎨 Frontend (Next.js 15)
 
-The application is fully containerized with Docker, meaning zero-configuration deployment.
+Built with React 19, TypeScript, Tailwind CSS, and Framer Motion. The UI is designed as a futuristic AI control center featuring glassmorphism, dynamic data visualizations, and smooth page transitions.
 
-### 1. Configure Environment
-```bash
-cp .env.example .env
-# Fill in your GROQ_API_KEY and random SECRET_KEY inside .env
-```
+### Features
+- **Dashboard**: Real-time stats (Total Users, Active Conversations, AI Reply Time).
+- **Chat Interface**: Manage and view dynamic conversations with relationship scores and memory tracking.
+- **Settings & Auth**: Complete JWT-based auth flow and customizable system settings.
+- **Legal Pages**: Professional Privacy Policy, Terms of Service, and Data Deletion pages.
 
-### 2. Start the Cluster
-```bash
-docker-compose up --build
-```
-This single command will:
-1. Start a PostgreSQL 15 database instance.
-2. Start an Alpine Redis server.
-3. Build the FastAPI image and install dependencies.
-4. Launch the `uvicorn` server asynchronously with connection pooling.
+### Deployment (Cloudflare Pages)
+The frontend is optimized for deployment on Cloudflare Pages using `@cloudflare/next-on-pages`.
+1. Connect this repository to Cloudflare Pages.
+2. Select **Next.js** framework preset.
+3. Set **Root directory** to `frontend`.
+4. Ensure **Compatibility Flags** includes `nodejs_compat` in the Cloudflare settings.
 
-### 3. Startup Events
-When FastAPI starts:
-- The `startup_event` in `app/main.py` is triggered.
-- It verifies the connection to PostgreSQL and initializes the table schemas automatically using SQLAlchemy's async engine.
-- Connection pools for PostgreSQL (size=20, max_overflow=10) and Redis are established.
+---
 
-### 4. Database Migrations
-Alembic is configured for async schema migrations. If you make model changes:
-```bash
-alembic revision -m "Description of changes"
-alembic upgrade head
-```
+## ⚙️ Backend (FastAPI)
+
+Built using Clean Architecture and SOLID principles. It uses PostgreSQL for persistent data, Redis for caching, and communicates directly with the Meta Official Instagram Graph API.
+
+### Core Systems
+- **Agent Brain Orchestrator**: An asynchronous central nervous system (EventBus) that coordinates all micro-agents and webhook events.
+- **Meta Graph API Integration**: Official, compliant integration for receiving and sending Instagram messages.
+- **Micro-Agents**:
+  - **Reply Agent**: Reconstructs context and communicates with Groq APIs.
+  - **Memory Agent**: Retrieves and saves user memory across sessions via Redis.
+  - **Analytics Agent**: Analyzes message sentiment and updates metrics.
+  - **Safety Agent**: Defends the system against prompt injections and jailbreaks.
+
+### Deployment (Railway)
+The backend is completely containerized and ready for 1-click deployment on Railway.
+1. Connect this repository to Railway.
+2. Set **Root Directory** to `/backend`.
+3. Railway will automatically detect the `railway.toml` / `Procfile` and use `uvicorn` to run the app.
+4. Add a PostgreSQL database in Railway and map your `.env` variables.
+*Note: The backend automatically converts standard Postgres URLs to `postgresql+asyncpg://` for async SQLAlchemy compatibility.*
+
+---
 
 ## 🔒 Security
-- **JWT Authentication**: Users must register and login to receive a Bearer token.
-- **Protected Routes**: Dependencies (`get_current_user`) ensure endpoints are secure.
-- **Role Permissions**: Administrative routes (like `/api/agent/control`) verify the user's role.
-- **CORS Middleware**: Preconfigured to handle cross-origin requests securely.
+- **JWT Authentication**: Secured endpoints for the dashboard.
+- **Webhook Verification**: Verifies HMAC signatures from Meta to ensure data integrity.
+- **Encrypted Tokens**: Access tokens are stored using Fernet encryption.
 
-## 📝 Logging
-AgentOS uses **Structured JSON Logging** (`app/utils/logger.py`) to easily integrate with tools like ELK stack, Datadog, or AWS CloudWatch. It logs execution times, errors, API requests, and memory updates automatically via FastAPI middleware.
+## 🚀 Local Development
+
+### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+© 2026 AgentOS. All Rights Reserved.
