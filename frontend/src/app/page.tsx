@@ -23,7 +23,8 @@ const colorMap: Record<string, { bg: string, blur: string, blurHover: string, te
 // Mock fetching function
 const fetchDashboardStats = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/dashboard/stats");
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    const res = await axios.get(`${apiUrl}/api/dashboard/stats`);
     return res.data;
   } catch (error) {
     // Fallback to mock data if backend is not available
