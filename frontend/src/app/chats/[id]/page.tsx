@@ -108,11 +108,21 @@ export default function ChatConversationPage() {
 
     // Send real request to backend
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    
+    // Retrieve token from Zustand persist storage manually since we're in an event handler or use the hook
+    let token = "";
+    try {
+      const storage = localStorage.getItem("agentos-auth-storage");
+      if (storage) {
+        token = JSON.parse(storage).state?.token || "";
+      }
+    } catch(e) {}
+
     fetch(`${apiUrl}/api/messages/chat`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
+        "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify({ content: inputValue })
     }).catch(err => {
