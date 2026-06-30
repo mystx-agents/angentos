@@ -44,9 +44,10 @@ echo "FastAPI Backend is healthy."
 # Step 4: Start Next.js Frontend
 echo "[3/4] Starting Next.js Frontend on port 3000..."
 cd frontend || exit
-# Ensure node_modules are installed
-if [ ! -d "node_modules" ]; then
-    npm install
+# Ensure node_modules and next binary are installed
+if [ ! -f "node_modules/.bin/next" ]; then
+    echo "Installing frontend dependencies..."
+    npm install --force
 fi
 # Start Next.js
 npm run dev > frontend.log 2>&1 &
